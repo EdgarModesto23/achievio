@@ -23,3 +23,29 @@
 
 # env file
 .env
+
+# Logs
+./achievio_client/logs
+./achievio_client/*.log
+./achievio_client/npm-debug.log*
+./achievio_client/yarn-debug.log*
+./achievio_client/yarn-error.log*
+./achievio_client/pnpm-debug.log*
+./achievio_client/lerna-debug.log*
+./achievio_client/
+./achievio_client/node_modules
+./achievio_client/dist
+./achievio_client/dist-ssr
+./achievio_client/*.local
+./achievio_client/
+./achievio_client/# Editor directories and files
+./achievio_client/.vscode/*
+./achievio_client/!.vscode/extensions.json
+./achievio_client/.idea
+./achievio_client/.DS_Store
+./achievio_client/*.suo
+./achievio_client/*.ntvs*
+./achievio_client/*.njsproj
+./achievio_client/*.sln
+./achievio_client/*.sw?
+
