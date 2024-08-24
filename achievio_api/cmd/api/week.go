@@ -12,6 +12,11 @@ import (
 	"achievio/internal/data"
 )
 
+type SpendPoints struct {
+	Points int    `json:"points"`
+	WeekID string `json:"week_id"`
+}
+
 type Week struct {
 	ID          string `bson:"_id,omitempty" json:"id,omitempty"`
 	Score       int    `bson:"score"         json:"score"`
@@ -83,6 +88,7 @@ func (a *app) nextWeek(w http.ResponseWriter, r *http.Request) {
 	curr, err := GetCurrentWeek(col)
 	if err != nil {
 		a.serverErrorResponse(w, r, err)
+		return
 	}
 	curr.Current = false
 	err = ChangeWeek(col, curr)
@@ -92,7 +98,11 @@ func (a *app) nextWeek(w http.ResponseWriter, r *http.Request) {
 	data, err := internal.PostDocument(col, &new_curr)
 	if err != nil {
 		a.serverErrorResponse(w, r, err)
+		return
 	}
 
 	a.writeJSON(w, 201, data, nil)
+}
+
+func (a *app) spendPoints(w http.ResponseWriter, r *http.Request) {
 }

@@ -16,9 +16,14 @@ func (a *app) routes() http.Handler {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
 
+	// Weeks routes
 	r.Get("/weeks", a.getWeeks)
 	r.Post("/next-week", a.nextWeek)
 	r.Post("/next-week-spend", a.nextWeek)
+
+	// Activities routes
+	r.Get("/activities", a.getActivities)
+	r.Post("/activities", a.createActivity)
 
 	return r
 }
