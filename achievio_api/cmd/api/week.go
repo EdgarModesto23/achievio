@@ -1,9 +1,15 @@
 package main
 
 import (
-	"achievio/internal/data"
-	"encoding/json"
+	"context"
 	"net/http"
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+
+	"achievio/internal/data"
 )
 
 type Week struct {
@@ -22,6 +28,46 @@ func (week *Week) SetID(n string) {
 	week.ID = n
 }
 
+func GetCurrentWeek(coll *mongo.Collection) (Week, error) {
+	var result Week
+	filter := bson.D{{Key: "current", Value: true}}
+	err := coll.FindOne(context.TODO(), filter).Decode(&result)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
+func getNewCurrent() Week {
+	return Week{
+		Score:       0,
+		Total_score: 0,
+		Date:        time.Now().UTC().Format(time.RFC3339),
+		Current:     true,
+	}
+}
+
+func ChangeWeek(coll *mongo.Collection, data Week) error {
+	id, _ := primitive.ObjectIDFromHex(data.ID)
+	filter := bson.D{{Key: "_id", Value: id}}
+	update := bson.D{
+		{
+			Key: "$set",
+			Value: bson.D{
+				{Key: "current", Value: data.Current},
+				{Key: "date", Value: data.Date},
+				{Key: "total_score", Value: data.Total_score},
+				{Key: "score", Value: data.Score},
+			},
+		},
+	}
+	_, err := coll.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 func (a *app) getWeeks(w http.ResponseWriter, r *http.Request) {
 	col := a.db.Database("achievio").Collection("week")
 
@@ -34,16 +80,16 @@ func (a *app) getWeeks(w http.ResponseWriter, r *http.Request) {
 
 func (a *app) nextWeek(w http.ResponseWriter, r *http.Request) {
 	col := a.db.Database("achievio").Collection("week")
-	var body Week
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&body)
+	curr, err := GetCurrentWeek(col)
 	if err != nil {
 		a.serverErrorResponse(w, r, err)
-		return
 	}
-	defer r.Body.Close()
+	curr.Current = false
+	err = ChangeWeek(col, curr)
 
-	data, err := internal.PostDocument(col, &body)
+	new_curr := getNewCurrent()
+
+	data, err := internal.PostDocument(col, &new_curr)
 	if err != nil {
 		a.serverErrorResponse(w, r, err)
 	}
