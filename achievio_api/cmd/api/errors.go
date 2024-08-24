@@ -14,6 +14,11 @@ func (a *app) errorResponse(w http.ResponseWriter, r *http.Request, status int, 
 	}
 }
 
+func (a *app) serverBadRequest(w http.ResponseWriter, r *http.Request, err error) {
+	m := fmt.Sprintf("Bad Request: %v", err)
+	a.errorResponse(w, r, http.StatusBadRequest, m)
+}
+
 func (a *app) serverErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
 	m := fmt.Sprintf("The server encountered a problem while processing your request: %v", err)
 	a.errorResponse(w, r, http.StatusInternalServerError, m)

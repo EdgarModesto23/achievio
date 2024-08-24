@@ -19,7 +19,8 @@ func (a *app) routes() http.Handler {
 	// Weeks routes
 	r.Get("/weeks", a.getWeeks)
 	r.Post("/next-week", a.nextWeek)
-	r.Post("/next-week-spend", a.nextWeek)
+	r.Post("/spend", a.spendPoints)
+	r.Post("/add-pts", a.addPts)
 
 	// Activities routes
 	r.Get("/activities", a.getActivities)

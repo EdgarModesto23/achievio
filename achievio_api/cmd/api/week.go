@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 
@@ -52,6 +54,40 @@ func getNewCurrent() Week {
 	}
 }
 
+func checkAvailablePoints(w Week, pts int) bool {
+	if w.Score < pts {
+		return false
+	}
+	return true
+}
+
+func spendPoints(w *Week, pts int) bool {
+	if !checkAvailablePoints(*w, pts) {
+		return false
+	}
+	w.Score -= pts
+	return true
+}
+
+func GetWeekByID(coll *mongo.Collection, ID string) (Week, error) {
+	var result Week
+	id, err := primitive.ObjectIDFromHex(ID)
+	if err != nil {
+		return result, err
+	}
+	filter := bson.D{{Key: "_id", Value: id}}
+	err = coll.FindOne(context.TODO(), filter).Decode(&result)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
+func AddPtsWeek(w *Week, pts int) {
+	w.Score += pts
+	w.Total_score += pts
+}
+
 func ChangeWeek(coll *mongo.Collection, data Week) error {
 	id, _ := primitive.ObjectIDFromHex(data.ID)
 	filter := bson.D{{Key: "_id", Value: id}}
@@ -83,6 +119,36 @@ func (a *app) getWeeks(w http.ResponseWriter, r *http.Request) {
 	a.writeJSON(w, 200, data, nil)
 }
 
+func (a *app) addPts(w http.ResponseWriter, r *http.Request) {
+	col := a.db.Database("achievio").Collection("week")
+
+	var reqBody SpendPoints
+
+	err := json.NewDecoder(r.Body).Decode(&reqBody)
+	if err != nil {
+		a.serverErrorResponse(w, r, err)
+		return
+	}
+	defer r.Body.Close()
+
+	week, err := GetWeekByID(col, reqBody.WeekID)
+	if err != nil {
+		a.serverErrorResponse(w, r, err)
+		return
+	}
+
+	AddPtsWeek(&week, reqBody.Points)
+	err = ChangeWeek(col, week)
+	if err != nil {
+		a.serverErrorResponse(w, r, err)
+		return
+	}
+
+	data := a.stoe(week)
+
+	a.writeJSON(w, 200, data, nil)
+}
+
 func (a *app) nextWeek(w http.ResponseWriter, r *http.Request) {
 	col := a.db.Database("achievio").Collection("week")
 	curr, err := GetCurrentWeek(col)
@@ -105,4 +171,39 @@ func (a *app) nextWeek(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *app) spendPoints(w http.ResponseWriter, r *http.Request) {
+	col := a.db.Database("achievio").Collection("week")
+
+	var reqBody SpendPoints
+
+	err := json.NewDecoder(r.Body).Decode(&reqBody)
+	if err != nil {
+		a.serverErrorResponse(w, r, err)
+		return
+	}
+	defer r.Body.Close()
+
+	week, err := GetWeekByID(col, reqBody.WeekID)
+	if err != nil {
+		a.serverErrorResponse(w, r, err)
+		return
+	}
+
+	if !week.Current {
+		err_msg := errors.New("You can only spend points on the current week")
+		a.serverBadRequest(w, r, err_msg)
+		return
+	}
+
+	if !spendPoints(&week, reqBody.Points) {
+		err_message := errors.New("You don't have enough points to spend")
+		a.serverBadRequest(w, r, err_message)
+		return
+	}
+	err = ChangeWeek(col, week)
+	if err != nil {
+		a.serverErrorResponse(w, r, err)
+		return
+	}
+	data := a.stoe(week)
+	a.writeJSON(w, 200, data, nil)
 }

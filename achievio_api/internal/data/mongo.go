@@ -54,7 +54,7 @@ func PostDocument(coll *mongo.Collection, data GenericDocument) (map[string]any,
 
 	res := make(map[string]any)
 
-	res["week"] = data
+	res["document"] = data
 
 	return res, nil
 }

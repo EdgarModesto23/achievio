@@ -26,3 +26,10 @@ func (a *app) writeJSON(
 
 	return nil
 }
+
+func (a *app) stoe(data any) map[string]any {
+	res := make(map[string]any)
+
+	res["document"] = data
+	return res
+}
