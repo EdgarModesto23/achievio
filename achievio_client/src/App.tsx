@@ -1,4 +1,4 @@
-import { DarkThemeToggle, Spinner } from "flowbite-react";
+import { DarkThemeToggle, Navbar, Spinner } from "flowbite-react";
 import { Button, Card } from "flowbite-react";
 import BarChart from "./components/barchart";
 import { useState } from "react";
@@ -7,20 +7,19 @@ import { useQuery } from "react-query";
 import { getWeeks } from "../server/getWeeks";
 import { getActivities } from "../server/getActivities";
 import { Week } from "../types/week";
+import { PlusIcon, TrophyIcon } from "@heroicons/react/16/solid";
+import { RewardsDrawer } from "./components/prices";
+import { AddActivity } from "./components/add-activity";
 
 function formatDate(dateString: string): string {
-  // Create a Date object from the input string
   const date = new Date(dateString);
 
-  // Get the day of the week as a short string (e.g., "Fri")
   const dayOfWeek = date.toLocaleDateString("en-GB", { weekday: "short" });
 
-  // Get the day, month, and year
   const day = date.getDate().toString().padStart(2, "0");
   const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Months are 0-indexed
   const year = date.getFullYear();
 
-  // Return the formatted date
   return `${dayOfWeek} ${day}-${month}-${year}`;
 }
 
@@ -30,6 +29,10 @@ function App() {
   const weeks = useQuery("weeks", getWeeks);
 
   const activities = useQuery("activities", getActivities);
+
+  const [openRewards, setOpenRewards] = useState(false);
+
+  const [openCreateActivity, setOpenCreateActivity] = useState(false);
 
   const formated_weeks = weeks.data
     ? weeks.data.map((w: Week) => ({ x: formatDate(w.date), y: w.total_score }))
@@ -120,9 +123,43 @@ function App() {
   };
   return (
     <main>
+      <Navbar fluid border rounded>
+        <Navbar.Brand href="https://flowbite-react.com">
+          <span className="self-center whitespace-nowrap text-xl font-semibold dark:text-white">
+            Achievio
+          </span>
+        </Navbar.Brand>
+        <Navbar.Toggle />
+        <Navbar.Collapse className="flex items-center justify-center">
+          <div className="flex items-center justify-center gap-7">
+            <Navbar.Link
+              className="flex cursor-pointer"
+              onClick={() => setOpenRewards(true)}
+            >
+              <TrophyIcon className="mr-1 size-5" /> Prices
+            </Navbar.Link>
+            <Navbar.Link
+              className="flex cursor-pointer"
+              onClick={() => setOpenCreateActivity(true)}
+            >
+              <PlusIcon className="mr-1 size-5" />
+              Add new activity
+            </Navbar.Link>
+            <Navbar.Link>
+              <DarkThemeToggle />
+            </Navbar.Link>
+          </div>{" "}
+        </Navbar.Collapse>
+      </Navbar>
+
+      <AddActivity
+        isOpen={openCreateActivity}
+        setIsOpen={setOpenCreateActivity}
+      />
+
       {activities.data ? (
         <div className="flex min-h-screen  justify-center gap-2 dark:bg-gray-800">
-          <Card className="my-40 ml-10 mr-auto w-full">
+          <Card className="my-5 ml-10 mr-auto w-full">
             <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
               Total of points on the last 10 weeks
             </h5>
@@ -155,11 +192,20 @@ function App() {
                   <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
                     {activity.name} - {activity.points} pts
                   </h5>
-                  <Button>Score</Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button>Score</Button>
+                    <Button color="gray">Edit</Button>
+                  </div>
                 </Card>
               ))}
             </div>
           </div>
+
+          <RewardsDrawer
+            isOpen={openRewards}
+            setIsOpen={setOpenRewards}
+            rewards={activities.data}
+          />
         </div>
       ) : (
         <Spinner />
