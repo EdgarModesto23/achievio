@@ -3,7 +3,9 @@ import { Week } from "../types/week";
 export async function getWeeks() {
   const res = await fetch("http://localhost:8004/weeks");
 
-  const data = await res.json();
+  const json_res = await res.json();
 
-  return data["documents"];
+  const data: Week[] = json_res["documents"];
+
+  return data;
 }

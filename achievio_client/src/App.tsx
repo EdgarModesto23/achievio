@@ -6,6 +6,23 @@ import { Activity } from "../types/activity";
 import { useQuery } from "react-query";
 import { getWeeks } from "../server/getWeeks";
 import { getActivities } from "../server/getActivities";
+import { Week } from "../types/week";
+
+function formatDate(dateString: string): string {
+  // Create a Date object from the input string
+  const date = new Date(dateString);
+
+  // Get the day of the week as a short string (e.g., "Fri")
+  const dayOfWeek = date.toLocaleDateString("en-GB", { weekday: "short" });
+
+  // Get the day, month, and year
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Months are 0-indexed
+  const year = date.getFullYear();
+
+  // Return the formatted date
+  return `${dayOfWeek} ${day}-${month}-${year}`;
+}
 
 function App() {
   const [number, setNumber] = useState(232);
@@ -14,21 +31,15 @@ function App() {
 
   const activities = useQuery("activities", getActivities);
 
-  console.log(weeks.data);
+  const formated_weeks = weeks.data
+    ? weeks.data.map((w: Week) => ({ x: formatDate(w.date), y: w.total_score }))
+    : null;
 
   const series: ApexAxisChartSeries = [
     {
       name: "Points",
       color: "#FDBA8C",
-      data: [
-        { x: "Mon", y: number },
-        { x: "Tue", y: 113 },
-        { x: "Wed", y: 341 },
-        { x: "Thu", y: 224 },
-        { x: "Fri", y: 522 },
-        { x: "Sat", y: 411 },
-        { x: "Sun", y: 243 },
-      ],
+      data: formated_weeks ? formated_weeks : [],
     },
   ];
   const options: object = {
