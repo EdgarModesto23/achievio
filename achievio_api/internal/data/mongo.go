@@ -15,6 +15,19 @@ type GenericDocument interface {
 	SetID(n string)
 }
 
+func GetDocumentByID[T any](coll *mongo.Collection, documentData *T, ID string) error {
+	id, err := primitive.ObjectIDFromHex(ID)
+	if err != nil {
+		return err
+	}
+	filter := bson.D{{Key: "_id", Value: id}}
+	err = coll.FindOne(context.TODO(), filter).Decode(&documentData)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func GetDocuments[T any](coll *mongo.Collection, documentData *[]T) map[string]any {
 	cursor, err := coll.Find(context.TODO(), bson.D{})
 	if err != nil {

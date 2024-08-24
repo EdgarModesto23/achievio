@@ -71,12 +71,8 @@ func spendPoints(w *Week, pts int) bool {
 
 func GetWeekByID(coll *mongo.Collection, ID string) (Week, error) {
 	var result Week
-	id, err := primitive.ObjectIDFromHex(ID)
-	if err != nil {
-		return result, err
-	}
-	filter := bson.D{{Key: "_id", Value: id}}
-	err = coll.FindOne(context.TODO(), filter).Decode(&result)
+
+	err := internal.GetDocumentByID(coll, &result, ID)
 	if err != nil {
 		return result, err
 	}

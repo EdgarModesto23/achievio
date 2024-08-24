@@ -37,6 +37,7 @@ func (a *app) routes() http.Handler {
 	// Activities routes
 	r.Get("/activities", a.getActivities)
 	r.Post("/activities", a.createActivity)
+	r.Put("/activities/{id}", a.updateActivity)
 
 	return r
 }
