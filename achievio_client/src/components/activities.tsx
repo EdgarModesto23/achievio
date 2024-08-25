@@ -14,9 +14,9 @@ import {
   UpdateActivityData,
 } from "../../server/updateActivity";
 import { Score, ScoreSpendData } from "../../server/score";
+import { Redeem } from "../../server/redeem";
 import { useWeekStore } from "../../stores/weeks";
 import { Week } from "../../types/week";
-import { act } from "react-dom/test-utils";
 
 function EditActivity({
   activity,
@@ -123,14 +123,23 @@ export default function ActivityCard({
   const weekStore = useWeekStore((state) => state);
 
   const handleClick = () => {
-    console.log("a");
     if (activity.type !== "R") {
       return handleScore();
     }
     handleRedeem();
   };
 
-  const handleRedeem = () => { };
+  const handleRedeem = async () => {
+    setIsSubmiting(true);
+    const score = activity.points;
+    const data: ScoreSpendData = {
+      week_id: weekStore.currentWeek.id,
+      points: score,
+    };
+    const res: Week = await Redeem(data);
+    weekStore.setCurrentScore(res["score"]);
+    setIsSubmiting(false);
+  };
 
   const handleScore = async () => {
     setIsSubmiting(true);
