@@ -18,10 +18,12 @@ function EditActivity({
   activity,
   isOpen,
   setIsOpen,
+  reward,
 }: {
   activity: Activity;
   isOpen: boolean;
   setIsOpen: (s: boolean) => void;
+  reward: boolean;
 }) {
   const [name, setName] = useState<string>(activity.name);
   const [points, setPoint] = useState<number>(activity.points);
@@ -29,6 +31,7 @@ function EditActivity({
     activity.type === "M" ? true : false,
   );
   const updateActList = useActivityStore((state) => state.updateActivity);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   function onCloseModal() {
     setIsOpen(false);
@@ -36,10 +39,13 @@ function EditActivity({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const type = isMultiplier ? "M" : "A";
     const data: UpdateActivityData = { name: name, points: points, type: type };
     const res: Activity = await UpdateActivity(data, activity.id);
     updateActList(res.id, res);
+    setIsSubmitting(false);
+    setIsOpen(false);
   };
 
   return (
@@ -75,18 +81,24 @@ function EditActivity({
                 required
               />
             </div>
-            <div className="mt-5 flex justify-between">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="type"
-                  checked={isMultiplier}
-                  onChange={() => setIsMultiplier(!isMultiplier)}
-                />
-                <Label htmlFor="type">Is multiplier</Label>
+            {reward ? (
+              <div></div>
+            ) : (
+              <div className="mt-5 flex justify-between">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="type"
+                    checked={isMultiplier}
+                    onChange={() => setIsMultiplier(!isMultiplier)}
+                  />
+                  <Label htmlFor="type">Is multiplier</Label>
+                </div>
               </div>
-            </div>
+            )}
             <div className="mt-7 w-full">
-              <Button type="submit">Save</Button>
+              <Button disabled={isSubmitting} type="submit">
+                Save
+              </Button>
             </div>
           </form>
         </div>
@@ -95,7 +107,13 @@ function EditActivity({
   );
 }
 
-export default function ActivityCard({ activity }: { activity: Activity }) {
+export default function ActivityCard({
+  activity,
+  reward,
+}: {
+  activity: Activity;
+  reward: boolean;
+}) {
   const [openEdit, setOpenEdit] = useState<boolean>(false);
 
   return (
@@ -105,7 +123,7 @@ export default function ActivityCard({ activity }: { activity: Activity }) {
           {activity.name} - {activity.points} pts
         </h5>
         <div className="grid grid-cols-2 gap-2">
-          <Button>Score</Button>
+          <Button>{reward ? "Redeem" : "Score"}</Button>
           <Button onClick={() => setOpenEdit(true)} color="gray">
             Edit
           </Button>
@@ -115,6 +133,7 @@ export default function ActivityCard({ activity }: { activity: Activity }) {
         activity={activity}
         isOpen={openEdit}
         setIsOpen={setOpenEdit}
+        reward={reward ? true : false}
       />
     </div>
   );

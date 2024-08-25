@@ -1,13 +1,9 @@
-export interface UpdateActivityData {
-  name: string;
-  points: number;
-  type: string;
-}
+import { UpdateActivityData } from "./updateActivity";
 
-export async function UpdateActivity(data: UpdateActivityData, ID: string) {
+export async function PostActivity(data: UpdateActivityData) {
   try {
-    const response = await fetch(`http://localhost:8004/activities/${ID}`, {
-      method: "PUT",
+    const response = await fetch(`http://localhost:8004/activities`, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },

@@ -58,10 +58,14 @@ function App() {
       weekStore.setCurrentScore(current_week ? current_week.score : 0);
     }
     if (activities.data) {
-      activityStore.setActivitiesList(activities.data);
-      const rewards = activityStore.activitesList.filter(
+      const activitiesList = activities.data.filter(
+        (a: Activity) => a.type !== "R",
+      );
+      activityStore.setActivitiesList(activitiesList);
+      const rewards = activities.data.filter(
         (act: Activity) => act.type === "R",
       );
+      console.log(rewards);
       activityStore.setRewardsList(rewards);
     }
   }, [weeks.data, activities.data]);
