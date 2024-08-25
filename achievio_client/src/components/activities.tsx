@@ -13,6 +13,10 @@ import {
   UpdateActivity,
   UpdateActivityData,
 } from "../../server/updateActivity";
+import { Score, ScoreSpendData } from "../../server/score";
+import { useWeekStore } from "../../stores/weeks";
+import { Week } from "../../types/week";
+import { act } from "react-dom/test-utils";
 
 function EditActivity({
   activity,
@@ -115,6 +119,36 @@ export default function ActivityCard({
   reward: boolean;
 }) {
   const [openEdit, setOpenEdit] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmiting] = useState<boolean>(false);
+  const weekStore = useWeekStore((state) => state);
+
+  const handleClick = () => {
+    console.log("a");
+    if (activity.type !== "R") {
+      return handleScore();
+    }
+    handleRedeem();
+  };
+
+  const handleRedeem = () => { };
+
+  const handleScore = async () => {
+    setIsSubmiting(true);
+    const score =
+      activity.type === "M"
+        ? weekStore.currentScore * activity.points - weekStore.currentScore
+        : activity.points;
+    const data: ScoreSpendData = {
+      week_id: weekStore.currentWeek.id,
+      points: score,
+    };
+    const res: Week = await Score(data);
+    weekStore.setCurrentScore(res["score"]);
+    weekStore.setWeekList(
+      weekStore.weekList.map((week: Week) => (week.id === res.id ? res : week)),
+    );
+    setIsSubmiting(false);
+  };
 
   return (
     <div>
@@ -124,7 +158,9 @@ export default function ActivityCard({
           {activity.type === "M" ? `${activity.points}x` : activity.points} pts
         </h5>
         <div className="grid grid-cols-2 gap-2">
-          <Button>{reward ? "Redeem" : "Score"}</Button>
+          <Button onClick={() => handleClick()} disabled={isSubmitting}>
+            {reward ? "Redeem" : "Score"}
+          </Button>
           <Button onClick={() => setOpenEdit(true)} color="gray">
             Edit
           </Button>

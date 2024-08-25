@@ -39,22 +39,13 @@ function App() {
 
   const [openCreateActivity, setOpenCreateActivity] = useState(false);
 
-  const formated_weeks = weeks.data
-    ? weeks.data.map((w: Week) => ({ x: formatDate(w.date), y: w.total_score }))
-    : null;
-
-  const series: ApexAxisChartSeries = [
-    {
-      name: "Points",
-      color: "#FDBA8C",
-      data: formated_weeks ? formated_weeks : [],
-    },
-  ];
-
   useEffect(() => {
     if (weeks.data) {
       weekStore.setWeekList(weeks.data);
       const current_week = weeks.data.find((val: Week) => val.current);
+      weekStore.setCurrentWeek(
+        current_week ? current_week : weekStore.currentWeek,
+      );
       weekStore.setCurrentScore(current_week ? current_week.score : 0);
     }
     if (activities.data) {
@@ -69,6 +60,21 @@ function App() {
       activityStore.setRewardsList(rewards);
     }
   }, [weeks.data, activities.data]);
+
+  const formated_weeks = weekStore.weekList
+    ? weekStore.weekList.map((w: Week) => ({
+      x: formatDate(w.date),
+      y: w.total_score,
+    }))
+    : null;
+
+  const series: ApexAxisChartSeries = [
+    {
+      name: "Points",
+      color: "#FDBA8C",
+      data: formated_weeks ? formated_weeks : [],
+    },
+  ];
 
   return (
     <main>
