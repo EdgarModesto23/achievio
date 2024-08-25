@@ -1,7 +1,7 @@
 import { DarkThemeToggle, Navbar, Spinner } from "flowbite-react";
 import { Button, Card } from "flowbite-react";
 import BarChart from "./components/barchart";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Activity } from "../types/activity";
 import { useQuery } from "react-query";
 import { getWeeks } from "../server/getWeeks";
@@ -10,6 +10,10 @@ import { Week } from "../types/week";
 import { PlusIcon, TrophyIcon } from "@heroicons/react/16/solid";
 import { RewardsDrawer } from "./components/prices";
 import { AddActivity } from "./components/add-activity";
+import ActivityCard from "./components/activities";
+import { useWeekStore } from "../stores/weeks";
+import { options } from "./options";
+import { useActivityStore } from "../stores/activites";
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -25,7 +29,8 @@ function formatDate(dateString: string): string {
 
 function App() {
   const [number, setNumber] = useState(232);
-
+  const weekStore = useWeekStore((state) => state);
+  const activityStore = useActivityStore((state) => state);
   const weeks = useQuery("weeks", getWeeks);
 
   const activities = useQuery("activities", getActivities);
@@ -45,82 +50,22 @@ function App() {
       data: formated_weeks ? formated_weeks : [],
     },
   ];
-  const options: object = {
-    colors: ["#FDBA8C"],
-    chart: {
-      type: "bar",
-      height: "320px",
-      fontFamily: "Inter, sans-serif",
-      toolbar: {
-        show: false,
-      },
-    },
-    plotOptions: {
-      bar: {
-        horizontal: true,
-        columnWidth: "70%",
-        borderRadiusApplication: "end",
-        borderRadius: 8,
-      },
-    },
-    tooltip: {
-      shared: true,
-      intersect: false,
-      style: {
-        fontFamily: "Inter, sans-serif",
-      },
-    },
-    states: {
-      hover: {
-        filter: {
-          type: "darken",
-          value: 1,
-        },
-      },
-    },
-    stroke: {
-      show: true,
-      width: 0,
-      colors: ["transparent"],
-    },
-    grid: {
-      show: false,
-      strokeDashArray: 4,
-      padding: {
-        left: 2,
-        right: 2,
-        top: -14,
-      },
-    },
-    dataLabels: {
-      enabled: true,
-    },
-    legend: {
-      show: false,
-    },
-    xaxis: {
-      floating: false,
-      labels: {
-        show: true,
-        style: {
-          fontFamily: "Inter, sans-serif",
-          cssClass: "text-xs font-normal fill-gray-500 dark:fill-gray-400",
-        },
-      },
-      axisBorder: {
-        show: false,
-      },
-      axisTicks: {
-        show: false,
-      },
-    },
-    yaxis: {
-      show: true,
-    },
-    fill: {
-      opacity: 1,
-    },
-  };
+
+  useEffect(() => {
+    if (weeks.data) {
+      weekStore.setWeekList(weeks.data);
+      const current_week = weeks.data.find((val: Week) => val.current);
+      weekStore.setCurrentScore(current_week ? current_week.score : 0);
+    }
+    if (activities.data) {
+      activityStore.setActivitiesList(activities.data);
+      const rewards = activityStore.activitesList.filter(
+        (act: Activity) => act.type === "R",
+      );
+      activityStore.setRewardsList(rewards);
+    }
+  }, [weeks.data, activities.data]);
+
   return (
     <main>
       <Navbar fluid border rounded>
@@ -163,6 +108,9 @@ function App() {
             <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
               Total of points on the last 10 weeks
             </h5>
+            <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+              Available points: {weekStore.currentScore}
+            </h2>
             <BarChart series={series} options={options} />
             <Button onClick={() => setNumber(number + 50)}>
               See full history
@@ -187,24 +135,18 @@ function App() {
               </h5>
             </Card>
             <div className="mt-5 flex h-5/6 flex-col items-start gap-2 overflow-y-scroll">
-              {activities.data.map((activity: Activity) => (
-                <Card className="flex w-full flex-col">
-                  <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                    {activity.name} - {activity.points} pts
-                  </h5>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button>Score</Button>
-                    <Button color="gray">Edit</Button>
-                  </div>
-                </Card>
-              ))}
+              {activityStore.activitesList.map(
+                (activity: Activity, idx: number) => (
+                  <ActivityCard activity={activity} key={idx} />
+                ),
+              )}
             </div>
           </div>
 
           <RewardsDrawer
             isOpen={openRewards}
             setIsOpen={setOpenRewards}
-            rewards={activities.data}
+            rewards={activityStore.rewardsList}
           />
         </div>
       ) : (

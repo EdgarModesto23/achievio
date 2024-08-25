@@ -78,6 +78,7 @@ func (a *app) updateActivity(w http.ResponseWriter, r *http.Request) {
 		err_msg := errors.New("Error while changing the activity")
 		a.serverBadRequest(w, r, err_msg)
 	}
+	result.SetID(act_id)
 
 	data := a.stoe(result)
 

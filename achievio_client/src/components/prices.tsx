@@ -1,5 +1,6 @@
-import { Button, Card, Drawer } from "flowbite-react";
+import { Drawer } from "flowbite-react";
 import { Activity } from "../../types/activity";
+import ActivityCard from "./activities";
 
 export function RewardsDrawer({
   isOpen,
@@ -21,16 +22,8 @@ export function RewardsDrawer({
             Redeem your rewards!
           </p>
           <div className="grid grid-cols-1 gap-4">
-            {rewards.map((reward: Activity) => (
-              <Card className="w-full flex-col">
-                <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                  {reward.name} - {reward.points} pts
-                </h5>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button>Redeem</Button>
-                  <Button color="gray">Edit</Button>
-                </div>
-              </Card>
+            {rewards.map((reward: Activity, idx: number) => (
+              <ActivityCard activity={reward} key={idx} />
             ))}
           </div>
         </Drawer.Items>
