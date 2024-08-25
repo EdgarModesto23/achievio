@@ -120,7 +120,8 @@ export default function ActivityCard({
     <div>
       <Card className="flex w-full flex-col">
         <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-          {activity.name} - {activity.points} pts
+          {activity.name} -{" "}
+          {activity.type === "M" ? `${activity.points}x` : activity.points} pts
         </h5>
         <div className="grid grid-cols-2 gap-2">
           <Button>{reward ? "Redeem" : "Score"}</Button>
