@@ -119,8 +119,10 @@ export default function ActivityCard({
   reward: boolean;
 }) {
   const [openEdit, setOpenEdit] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmiting] = useState<boolean>(false);
   const weekStore = useWeekStore((state) => state);
+  const [isAvailable, setIsAvailable] = useState<boolean>(
+    weekStore.currentScore < activity.points ? true : false,
+  );
 
   const handleClick = () => {
     if (activity.type !== "R") {
@@ -130,7 +132,6 @@ export default function ActivityCard({
   };
 
   const handleRedeem = async () => {
-    setIsSubmiting(true);
     const score = activity.points;
     const data: ScoreSpendData = {
       week_id: weekStore.currentWeek.id,
@@ -138,11 +139,9 @@ export default function ActivityCard({
     };
     const res: Week = await Redeem(data);
     weekStore.setCurrentScore(res["score"]);
-    setIsSubmiting(false);
   };
 
   const handleScore = async () => {
-    setIsSubmiting(true);
     const score =
       activity.type === "M"
         ? weekStore.currentScore * activity.points - weekStore.currentScore
@@ -156,7 +155,6 @@ export default function ActivityCard({
     weekStore.setWeekList(
       weekStore.weekList.map((week: Week) => (week.id === res.id ? res : week)),
     );
-    setIsSubmiting(false);
   };
 
   return (
@@ -167,7 +165,10 @@ export default function ActivityCard({
           {activity.type === "M" ? `${activity.points}x` : activity.points} pts
         </h5>
         <div className="grid grid-cols-2 gap-2">
-          <Button onClick={() => handleClick()} disabled={isSubmitting}>
+          <Button
+            onClick={() => handleClick()}
+            disabled={reward ? isAvailable : false}
+          >
             {reward ? "Redeem" : "Score"}
           </Button>
           <Button onClick={() => setOpenEdit(true)} color="gray">
